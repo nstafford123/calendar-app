@@ -196,6 +196,12 @@
             min-height: 50px;
         }
 
+        .grid-events.drop-zone {
+            background: rgba(74, 144, 226, 0.1);
+            border: 2px dashed var(--accent);
+            border-radius: 4px;
+        }
+
         .event-chip {
             width: 96px;
             padding: 8px 10px;
@@ -293,6 +299,11 @@
         .day-cell .event-chip {
             width: 100%;
             margin-bottom: 4px;
+        }
+
+        .day-cell.drop-zone {
+            background: rgba(74, 144, 226, 0.1);
+            border: 2px dashed var(--accent);
         }
 
         /* Week View Styles */
@@ -1207,6 +1218,10 @@
                     eventsCell.appendChild(chip);
                 });
                 
+                // Set up drop zone for grid events
+                eventsCell.dataset.date = formatDate(date);
+                setupDropZone(eventsCell);
+                
                 row.appendChild(dateCell);
                 row.appendChild(eventsCell);
                 gridContent.appendChild(row);
@@ -1292,6 +1307,10 @@
                     more.textContent = `+${dayEvents.length - 3} more`;
                     cell.appendChild(more);
                 }
+                
+                // Set up drop zone for month view
+                cell.dataset.date = formatDate(date);
+                setupDropZone(cell);
             }
             
             return cell;
@@ -1405,10 +1424,20 @@
             
             chip.appendChild(titleContainer);
             
-            // Add click handler to show event details
+            // Make all event chips draggable
+            chip.draggable = true;
+            chip.dataset.eventId = event.id;
+            
+            // Add drag and drop events
+            chip.addEventListener('dragstart', handleDragStart);
+            chip.addEventListener('dragend', handleDragEnd);
+            
+            // Add click handler to show event details (only if not dragging)
             chip.addEventListener('click', (e) => {
                 e.stopPropagation();
-                showEventDetails(event);
+                if (!chip.classList.contains('dragging')) {
+                    showEventDetails(event);
+                }
             });
             
             return chip;
@@ -1533,14 +1562,15 @@
             const targetDate = e.target.dataset.date;
             const targetHour = e.target.dataset.hour;
             
-            if (!targetDate || !targetHour) return;
+            if (!targetDate) return;
             
             // Update event
             const eventToMove = events.find(event => event.id === draggedEvent.id);
             if (eventToMove) {
                 eventToMove.date = targetDate;
                 
-                if (eventToMove.startTime) {
+                // Only update time if we have a target hour (week view)
+                if (targetHour && eventToMove.startTime) {
                     const oldStartTime = eventToMove.startTime.split(':');
                     const newStartTime = `${targetHour.padStart(2, '0')}:${oldStartTime[1]}`;
                     eventToMove.startTime = newStartTime;
@@ -1552,9 +1582,12 @@
                         const newEndHour = parseInt(targetHour) + duration;
                         eventToMove.endTime = `${newEndHour.toString().padStart(2, '0')}:${oldEndTime[1]}`;
                     }
+                    
+                    console.log(`Event moved: ${eventToMove.title} to ${targetDate} at ${eventToMove.startTime}`);
+                } else {
+                    console.log(`Event moved: ${eventToMove.title} to ${targetDate}`);
                 }
                 
-                console.log(`Event moved: ${eventToMove.title} to ${targetDate} at ${eventToMove.startTime}`);
                 updateDisplay();
             }
         }
