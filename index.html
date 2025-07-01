@@ -295,6 +295,155 @@
             margin-bottom: 4px;
         }
 
+        /* Week View Styles */
+        .week-view {
+            display: none;
+        }
+
+        .week-view.active {
+            display: block;
+        }
+
+        .week-settings {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .week-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .time-slot {
+            background: var(--bg-secondary);
+            padding: 10px 5px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .week-day-column {
+            background: var(--bg-primary);
+            position: relative;
+            min-height: 60px;
+            border-right: 1px solid var(--border-color);
+            padding: 2px 4px;
+            overflow: visible;
+        }
+
+        .week-day-column.drop-zone {
+            background: rgba(74, 144, 226, 0.1);
+            border: 2px dashed var(--accent);
+        }
+
+        .week-day-column .event-chip {
+            position: absolute;
+            margin-bottom: 2px;
+            width: calc(100% - 8px);
+            max-width: none;
+            font-size: 11px;
+            padding: 6px 8px;
+            cursor: move;
+            user-select: none;
+        }
+
+        .week-day-column .event-chip.dragging {
+            opacity: 0.5;
+            z-index: 1000;
+        }
+
+        .week-day-column .event-chip.resizable {
+            resize: vertical;
+            overflow: hidden;
+        }
+
+        .week-day-column .event-chip .resize-handle {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: ns-resize;
+            display: none;
+        }
+
+        .week-day-column .event-chip:hover .resize-handle {
+            display: block;
+        }
+
+        .week-header {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            margin-bottom: 1px;
+            border: 1px solid var(--border-color);
+        }
+
+        .week-header .day-header {
+            padding: 15px 10px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .week-header .time-slot {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .file-drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: var(--text-secondary);
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-tertiary);
+        }
+
+        .file-drop-zone:hover {
+            border-color: var(--accent);
+            background: rgba(74, 144, 226, 0.05);
+        }
+
+        .file-drop-zone.active {
+            border-color: var(--accent);
+            background: rgba(74, 144, 226, 0.1);
+            transform: scale(1.02);
+        }
+
+        .attachment-list {
+            margin-top: 10px;
+        }
+
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+
+        .attachment-item .remove-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0;
+            font-size: 14px;
+        }
+
         /* Modal Styles */
         .modal {
             display: none;
@@ -524,6 +673,7 @@
             <h1 style="font-size: 20px; font-weight: 500;">Sheets Calendar</h1>
             <div class="view-toggle">
                 <button class="view-btn active" data-view="grid">Grid</button>
+                <button class="view-btn" data-view="week">Week</button>
                 <button class="view-btn" data-view="month">Month</button>
             </div>
             <button id="prevBtn">←</button>
@@ -593,6 +743,37 @@
                 <div id="gridContent"></div>
             </div>
 
+            <!-- Week View -->
+            <div class="week-view" id="weekView">
+                <div class="week-settings">
+                    <label>Show hours from:</label>
+                    <select id="weekStartHour">
+                        <option value="6">6:00 AM</option>
+                        <option value="7">7:00 AM</option>
+                        <option value="8" selected>8:00 AM</option>
+                        <option value="9">9:00 AM</option>
+                    </select>
+                    <label>to:</label>
+                    <select id="weekEndHour">
+                        <option value="17">5:00 PM</option>
+                        <option value="18" selected>6:00 PM</option>
+                        <option value="19">7:00 PM</option>
+                        <option value="20">8:00 PM</option>
+                    </select>
+                </div>
+                <div class="week-header" id="weekHeader">
+                    <div class="time-slot"></div>
+                    <div class="day-header">Sun</div>
+                    <div class="day-header">Mon</div>
+                    <div class="day-header">Tue</div>
+                    <div class="day-header">Wed</div>
+                    <div class="day-header">Thu</div>
+                    <div class="day-header">Fri</div>
+                    <div class="day-header">Sat</div>
+                </div>
+                <div id="weekContent"></div>
+            </div>
+
             <!-- Month View -->
             <div class="month-view" id="monthView">
                 <h2 class="month-header" id="monthHeader"></h2>
@@ -642,6 +823,15 @@
                     <label>Description</label>
                     <textarea id="eventDescription" placeholder="Add description"></textarea>
                 </div>
+
+                <div class="form-group">
+                    <label>Attachments</label>
+                    <div class="file-drop-zone" id="fileDropZone">
+                        <p>Drop files here or click to browse</p>
+                        <input type="file" id="fileInput" multiple style="display: none;">
+                    </div>
+                    <div class="attachment-list" id="attachmentList"></div>
+                </div>
                 
                 <div class="modal-footer">
                     <button type="button" id="cancelBtn">Cancel</button>
@@ -656,6 +846,7 @@
         let currentView = 'grid';
         let currentDate = new Date();
         let events = [];
+        let eventAttachments = [];
         
         // Categories
         let categories = [
@@ -780,12 +971,152 @@
                     document.getElementById('sidebar').classList.toggle('active');
                 });
             }
+
+            // File attachment functionality
+            setupFileDropZone();
+            
+            // Week view hour selectors
+            document.getElementById('weekStartHour')?.addEventListener('change', () => {
+                if (currentView === 'week') displayWeekView();
+            });
+            
+            document.getElementById('weekEndHour')?.addEventListener('change', () => {
+                if (currentView === 'week') displayWeekView();
+            });
+        }
+
+        function setupFileDropZone() {
+            const fileDropZone = document.getElementById('fileDropZone');
+            const fileInput = document.getElementById('fileInput');
+            
+            if (!fileDropZone || !fileInput) return;
+            
+            // Make the drop zone clickable
+            fileDropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Handle file selection via input
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+            
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileDropZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            // Highlight drop area when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileDropZone.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileDropZone.addEventListener(eventName, unhighlight, false);
+            });
+            
+            // Handle dropped files
+            fileDropZone.addEventListener('drop', handleDrop, false);
+            
+            // Global file drop to create events
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                
+                // If dropping outside the modal, create a new event
+                if (!document.getElementById('eventModal').classList.contains('active')) {
+                    const files = Array.from(e.dataTransfer.files);
+                    if (files.length > 0) {
+                        // Open event modal and attach files
+                        document.getElementById('eventModal').classList.add('active');
+                        document.getElementById('eventDate').value = formatDate(currentDate);
+                        document.getElementById('eventTitle').value = files[0].name.split('.')[0]; // Use filename as title
+                        handleFiles(files);
+                    }
+                }
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            function highlight(e) {
+                fileDropZone.classList.add('active');
+            }
+            
+            function unhighlight(e) {
+                fileDropZone.classList.remove('active');
+            }
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+        }
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                    alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+                    return;
+                }
+                
+                // Create file object
+                const fileObj = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    file: file
+                };
+                
+                eventAttachments.push(fileObj);
+                displayAttachments();
+            });
+        }
+
+        function displayAttachments() {
+            const attachmentList = document.getElementById('attachmentList');
+            if (!attachmentList) return;
+            
+            attachmentList.innerHTML = '';
+            
+            eventAttachments.forEach(attachment => {
+                const item = document.createElement('div');
+                item.className = 'attachment-item';
+                
+                item.innerHTML = `
+                    <span>📎 ${attachment.name}</span>
+                    <span style="color: var(--text-secondary); font-size: 10px;">${formatFileSize(attachment.size)}</span>
+                    <button type="button" class="remove-btn" onclick="removeAttachment('${attachment.id}')">×</button>
+                `;
+                
+                attachmentList.appendChild(item);
+            });
+        }
+
+        function removeAttachment(id) {
+            eventAttachments = eventAttachments.filter(attachment => attachment.id !== id);
+            displayAttachments();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
         function navigate(direction) {
             switch(currentView) {
                 case 'grid':
                     currentDate.setMonth(currentDate.getMonth() + direction);
+                    break;
+                case 'week':
+                    currentDate.setDate(currentDate.getDate() + (7 * direction));
                     break;
                 case 'month':
                     currentDate.setMonth(currentDate.getMonth() + direction);
@@ -799,6 +1130,9 @@
             switch(currentView) {
                 case 'grid':
                     displayGridView();
+                    break;
+                case 'week':
+                    displayWeekView();
                     break;
                 case 'month':
                     displayMonthView();
@@ -814,11 +1148,18 @@
                 case 'month':
                     rangeElement.textContent = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     break;
+                case 'week':
+                    const weekStart = new Date(currentDate);
+                    weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    rangeElement.textContent = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                    break;
             }
         }
 
         function displayGridView() {
-            document.querySelectorAll('.grid-view, .month-view').forEach(view => {
+            document.querySelectorAll('.grid-view, .week-view, .month-view').forEach(view => {
                 view.classList.remove('active');
             });
             document.getElementById('gridView').classList.add('active');
@@ -873,7 +1214,7 @@
         }
 
         function displayMonthView() {
-            document.querySelectorAll('.grid-view, .month-view').forEach(view => {
+            document.querySelectorAll('.grid-view, .week-view, .month-view').forEach(view => {
                 view.classList.remove('active');
             });
             document.getElementById('monthView').classList.add('active');
@@ -956,6 +1297,77 @@
             return cell;
         }
 
+        function displayWeekView() {
+            document.querySelectorAll('.grid-view, .week-view, .month-view').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.getElementById('weekView').classList.add('active');
+            
+            const weekContent = document.getElementById('weekContent');
+            weekContent.innerHTML = '';
+            
+            const startHour = parseInt(document.getElementById('weekStartHour').value);
+            const endHour = parseInt(document.getElementById('weekEndHour').value);
+            
+            // Calculate week dates
+            const weekStart = new Date(currentDate);
+            weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+            
+            // Update week header with dates
+            const weekHeader = document.getElementById('weekHeader');
+            const dayHeaders = weekHeader.querySelectorAll('.day-header');
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            
+            dayHeaders.forEach((header, index) => {
+                const headerDate = new Date(weekStart);
+                headerDate.setDate(weekStart.getDate() + index);
+                header.innerHTML = `${dayNames[index]}<br><span style="font-size: 11px; font-weight: normal;">${headerDate.getDate()}</span>`;
+            });
+            
+            // Create time slots
+            for (let hour = startHour; hour < endHour; hour++) {
+                const timeRow = document.createElement('div');
+                timeRow.className = 'week-grid';
+                
+                const timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                const displayHour = hour === 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+                const amPm = hour < 12 ? 'AM' : 'PM';
+                timeSlot.textContent = `${displayHour}:00 ${amPm}`;
+                timeRow.appendChild(timeSlot);
+                
+                for (let day = 0; day < 7; day++) {
+                    const dayColumn = document.createElement('div');
+                    dayColumn.className = 'week-day-column';
+                    dayColumn.dataset.day = day;
+                    dayColumn.dataset.hour = hour;
+                    
+                    const cellDate = new Date(weekStart);
+                    cellDate.setDate(weekStart.getDate() + day);
+                    dayColumn.dataset.date = formatDate(cellDate);
+                    
+                    // Add drop zone functionality
+                    setupDropZone(dayColumn);
+                    
+                    // Get events for this hour and day
+                    const dayEvents = getEventsForDate(cellDate);
+                    dayEvents.forEach(event => {
+                        if (!event.allDay && event.startTime) {
+                            const eventHour = parseInt(event.startTime.split(':')[0]);
+                            if (eventHour === hour) {
+                                const chip = createDraggableEventChip(event);
+                                dayColumn.appendChild(chip);
+                            }
+                        }
+                    });
+                    
+                    timeRow.appendChild(dayColumn);
+                }
+                
+                weekContent.appendChild(timeRow);
+            }
+        }
+
         function createEventChip(event, isCompact = false) {
             const chip = document.createElement('div');
             chip.className = 'event-chip';
@@ -972,12 +1384,179 @@
                 chip.appendChild(time);
             }
             
+            const titleContainer = document.createElement('div');
+            titleContainer.style.display = 'flex';
+            titleContainer.style.alignItems = 'center';
+            titleContainer.style.gap = '4px';
+            
             const title = document.createElement('div');
             title.className = 'event-title';
             title.textContent = event.title;
-            chip.appendChild(title);
+            titleContainer.appendChild(title);
+            
+            // Add attachment indicator
+            if (event.attachments && event.attachments.length > 0) {
+                const attachmentIcon = document.createElement('span');
+                attachmentIcon.textContent = '📎';
+                attachmentIcon.style.fontSize = '10px';
+                attachmentIcon.title = `${event.attachments.length} attachment(s)`;
+                titleContainer.appendChild(attachmentIcon);
+            }
+            
+            chip.appendChild(titleContainer);
+            
+            // Add click handler to show event details
+            chip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showEventDetails(event);
+            });
             
             return chip;
+        }
+
+        function showEventDetails(event) {
+            const details = `
+                Event: ${event.title}
+                Date: ${event.date}
+                ${event.startTime ? `Time: ${event.startTime}${event.endTime ? ' - ' + event.endTime : ''}` : 'All Day'}
+                Category: ${categories.find(c => c.id === event.category)?.name || event.category}
+                ${event.location ? `Location: ${event.location}` : ''}
+                ${event.description ? `Description: ${event.description}` : ''}
+                ${event.attachments && event.attachments.length > 0 ? `Attachments: ${event.attachments.length} file(s)` : ''}
+            `;
+            
+            alert(details);
+        }
+
+        function createDraggableEventChip(event) {
+            const chip = createEventChip(event);
+            
+            // Make draggable
+            chip.draggable = true;
+            chip.dataset.eventId = event.id;
+            
+            // Add resize handle for week view
+            const resizeHandle = document.createElement('div');
+            resizeHandle.className = 'resize-handle';
+            chip.appendChild(resizeHandle);
+            
+            // Drag and drop events
+            chip.addEventListener('dragstart', handleDragStart);
+            chip.addEventListener('dragend', handleDragEnd);
+            
+            // Resize events
+            let isResizing = false;
+            resizeHandle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                isResizing = true;
+                document.addEventListener('mousemove', handleResize);
+                document.addEventListener('mouseup', handleResizeEnd);
+            });
+            
+            function handleResize(e) {
+                if (!isResizing) return;
+                
+                const rect = chip.getBoundingClientRect();
+                const newHeight = e.clientY - rect.top;
+                if (newHeight > 30) { // Minimum height
+                    chip.style.height = newHeight + 'px';
+                }
+            }
+            
+            function handleResizeEnd() {
+                if (!isResizing) return;
+                isResizing = false;
+                document.removeEventListener('mousemove', handleResize);
+                document.removeEventListener('mouseup', handleResizeEnd);
+                
+                // Calculate new end time based on height
+                const chipHeight = chip.offsetHeight;
+                const hourHeight = 60; // Approximate height per hour
+                const duration = Math.max(1, Math.round(chipHeight / hourHeight));
+                
+                // Update event duration
+                const eventId = parseInt(chip.dataset.eventId);
+                const eventToUpdate = events.find(e => e.id === eventId);
+                if (eventToUpdate && eventToUpdate.startTime) {
+                    const startHour = parseInt(eventToUpdate.startTime.split(':')[0]);
+                    const startMin = parseInt(eventToUpdate.startTime.split(':')[1]);
+                    const endHour = startHour + duration;
+                    eventToUpdate.endTime = `${endHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
+                    
+                    console.log(`Event resized: ${eventToUpdate.title} now ends at ${eventToUpdate.endTime}`);
+                    updateDisplay();
+                }
+            }
+            
+            return chip;
+        }
+
+        function setupDropZone(element) {
+            element.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                element.classList.add('drop-zone');
+            });
+            
+            element.addEventListener('dragleave', () => {
+                element.classList.remove('drop-zone');
+            });
+            
+            element.addEventListener('drop', handleDrop);
+        }
+
+        let draggedEvent = null;
+
+        function handleDragStart(e) {
+            draggedEvent = {
+                id: parseInt(e.target.dataset.eventId),
+                element: e.target
+            };
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drop-zone');
+            });
+            draggedEvent = null;
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drop-zone');
+            
+            if (!draggedEvent) return;
+            
+            const targetDate = e.target.dataset.date;
+            const targetHour = e.target.dataset.hour;
+            
+            if (!targetDate || !targetHour) return;
+            
+            // Update event
+            const eventToMove = events.find(event => event.id === draggedEvent.id);
+            if (eventToMove) {
+                eventToMove.date = targetDate;
+                
+                if (eventToMove.startTime) {
+                    const oldStartTime = eventToMove.startTime.split(':');
+                    const newStartTime = `${targetHour.padStart(2, '0')}:${oldStartTime[1]}`;
+                    eventToMove.startTime = newStartTime;
+                    
+                    // Update end time if it exists
+                    if (eventToMove.endTime) {
+                        const oldEndTime = eventToMove.endTime.split(':');
+                        const duration = parseInt(oldEndTime[0]) - parseInt(oldStartTime[0]);
+                        const newEndHour = parseInt(targetHour) + duration;
+                        eventToMove.endTime = `${newEndHour.toString().padStart(2, '0')}:${oldEndTime[1]}`;
+                    }
+                }
+                
+                console.log(`Event moved: ${eventToMove.title} to ${targetDate} at ${eventToMove.startTime}`);
+                updateDisplay();
+            }
         }
 
         function getEventsForDate(date) {
@@ -998,7 +1577,8 @@
                 user: document.getElementById('userSelect').value,
                 description: document.getElementById('eventDescription').value,
                 location: document.getElementById('eventLocation').value,
-                allDay: document.getElementById('allDayEvent').checked
+                allDay: document.getElementById('allDayEvent').checked,
+                attachments: [...eventAttachments] // Copy current attachments
             };
             
             if (!newEvent.allDay) {
@@ -1009,6 +1589,11 @@
             events.push(newEvent);
             document.getElementById('eventModal').classList.remove('active');
             document.getElementById('eventForm').reset();
+            
+            // Clear attachments for next event
+            eventAttachments = [];
+            displayAttachments();
+            
             updateDisplay();
         }
 
