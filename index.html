@@ -639,14 +639,14 @@
             .header {
                 padding: 10px;
             }
-            
+
             .header-left {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
                 width: 100%;
             }
-            
+
             .sidebar {
                 width: 100%;
                 position: fixed;
@@ -656,11 +656,11 @@
                 z-index: 999;
                 display: none;
             }
-            
+
             .sidebar.active {
                 display: block;
             }
-            
+
             .calendar-container {
                 padding: 10px;
             }
@@ -676,74 +676,44 @@
             }
         }
     </style>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCg87sqNfBpZSwmC2wSnpNU7_YgYuoZrvw",
+            authDomain: "my-calendar-app-7fa0e.firebaseapp.com",
+            projectId: "my-calendar-app-7fa0e",
+            storageBucket: "my-calendar-app-7fa0e.appspot.com",
+            messagingSenderId: "618763956813",
+            appId: "1:618763956813:web:48a5a77f34e086f62e6204"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
 </head>
 <body>
     <div class="header">
         <div class="header-left">
-            <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
-            <h1 style="font-size: 20px; font-weight: 500;">Sheets Calendar</h1>
-            <div class="view-toggle">
-                <button class="view-btn active" data-view="grid">Grid</button>
-                <button class="view-btn" data-view="week">Week</button>
-                <button class="view-btn" data-view="month">Month</button>
-            </div>
+            <h1 style="font-size: 18px; font-weight: 500;">📅 My Calendar</h1>
+            <div class="navigation-controls">
             <button id="prevBtn">←</button>
             <button id="todayBtn">Today</button>
             <button id="nextBtn">→</button>
-            <span id="currentDateRange" style="margin-left: 15px; color: var(--text-secondary);"></span>
+            </div>
+            <span id="currentDateRange" style="color: var(--text-secondary); font-size: 14px;"></span>
         </div>
         <div class="header-right">
-            <select id="userSelect">
-                <option value="user1">John Doe</option>
-                <option value="user2">Jane Smith</option>
-                <option value="user3">Team Calendar</option>
-            </select>
-            <button id="addEventBtn">+ Add Event</button>
-            <button id="themeToggle">☀️</button>
+            <button id="addEventBtn" class="add-event-mobile">+ Add Event</button>
+            <button id="themeToggle">🌙</button>
         </div>
     </div>
 
     <div class="main-container">
-        <div class="sidebar" id="sidebar">
-            <input type="text" class="search-box" id="searchBox" placeholder="Search events...">
-            
-            <div class="search-filters">
-                <div class="quick-filters">
-                    <button class="quick-filter-btn" data-filter="today">Today</button>
-                    <button class="quick-filter-btn" data-filter="week">This Week</button>
-                    <button class="quick-filter-btn" data-filter="month">This Month</button>
-                </div>
-                
-                <div class="filter-group">
-                    <label>Category Filter:</label>
-                    <select id="categoryFilter">
-                        <option value="">All Categories</option>
-                    </select>
-                </div>
-            </div>
-            
-            <h3 style="margin-bottom: 10px; font-size: 14px; font-weight: 500;">Categories</h3>
-            <div class="categories" id="categoriesList"></div>
-
-            <div class="quick-actions">
-                <h3 style="margin-bottom: 10px; font-size: 14px; font-weight: 500;">Quick Actions</h3>
-                <button class="quick-action-btn" id="quickMeetingBtn">Schedule Meeting</button>
-                <button class="quick-action-btn" id="quickReminderBtn">Set Reminder</button>
-            </div>
-
-            <div class="stats-section">
-                <h3 style="margin-bottom: 10px; font-size: 14px; font-weight: 500;">Statistics</h3>
-                <div class="stat-item">
-                    <span class="stat-label">Total Events</span>
-                    <span class="stat-value" id="totalStat">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">This Month</span>
-                    <span class="stat-value" id="monthStat">0</span>
-                </div>
-            </div>
-        </div>
-
         <div class="calendar-container">
             <!-- Grid View -->
             <div class="grid-view active" id="gridView">
@@ -754,42 +724,7 @@
                 <div id="gridContent"></div>
             </div>
 
-            <!-- Week View -->
-            <div class="week-view" id="weekView">
-                <div class="week-settings">
-                    <label>Show hours from:</label>
-                    <select id="weekStartHour">
-                        <option value="6">6:00 AM</option>
-                        <option value="7">7:00 AM</option>
-                        <option value="8" selected>8:00 AM</option>
-                        <option value="9">9:00 AM</option>
-                    </select>
-                    <label>to:</label>
-                    <select id="weekEndHour">
-                        <option value="17">5:00 PM</option>
-                        <option value="18" selected>6:00 PM</option>
-                        <option value="19">7:00 PM</option>
-                        <option value="20">8:00 PM</option>
-                    </select>
-                </div>
-                <div class="week-header" id="weekHeader">
-                    <div class="time-slot"></div>
-                    <div class="day-header">Sun</div>
-                    <div class="day-header">Mon</div>
-                    <div class="day-header">Tue</div>
-                    <div class="day-header">Wed</div>
-                    <div class="day-header">Thu</div>
-                    <div class="day-header">Fri</div>
-                    <div class="day-header">Sat</div>
-                </div>
-                <div id="weekContent"></div>
-            </div>
 
-            <!-- Month View -->
-            <div class="month-view" id="monthView">
-                <h2 class="month-header" id="monthHeader"></h2>
-                <div class="month-grid" id="monthGrid"></div>
-            </div>
         </div>
     </div>
 
@@ -824,7 +759,7 @@
                     <label>Category</label>
                     <select id="eventCategory"></select>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Location</label>
                     <input type="text" id="eventLocation" placeholder="Add location">
@@ -833,15 +768,6 @@
                 <div class="form-group">
                     <label>Description</label>
                     <textarea id="eventDescription" placeholder="Add description"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Attachments</label>
-                    <div class="file-drop-zone" id="fileDropZone">
-                        <p>Drop files here or click to browse</p>
-                        <input type="file" id="fileInput" multiple style="display: none;">
-                    </div>
-                    <div class="attachment-list" id="attachmentList"></div>
                 </div>
                 
                 <div class="modal-footer">
@@ -859,6 +785,9 @@
         let events = [];
         let eventAttachments = [];
         
+        // Mobile detection
+        const isMobile = window.innerWidth <= 600;
+        
         // Categories
         let categories = [
             { id: 'meeting', name: 'Meetings', color: '#5484ed' },
@@ -868,37 +797,132 @@
             { id: 'health', name: 'Health', color: '#dc2127' }
         ];
 
-        // Sample events
-        events = [
-            {
-                id: 1,
-                title: 'Team Meeting',
-                date: formatDate(new Date()),
-                startTime: '10:00',
-                endTime: '11:00',
-                category: 'meeting',
-                user: 'user1',
-                location: 'Conference Room A',
-                description: 'Weekly team standup'
-            },
-            {
-                id: 2,
-                title: 'Lunch Break',
-                date: formatDate(new Date()),
-                startTime: '12:00',
-                endTime: '13:00',
-                category: 'personal',
-                user: 'user1',
-                allDay: false
+        // Load events from Firestore
+        function loadEvents() {
+            db.collection('events').onSnapshot((snapshot) => {
+                events = [];
+                snapshot.forEach((doc) => {
+                    events.push({ id: doc.id, ...doc.data() });
+                });
+                updateDisplay();
+            }, (error) => {
+                console.error('Error loading events:', error);
+                // Fallback to sample events if Firestore fails
+                loadSampleEvents();
+            });
+        }
+
+        // Fallback sample events
+        function loadSampleEvents() {
+            events = [
+                {
+                    id: 'sample1',
+                    title: 'Team Meeting',
+                    date: formatDate(new Date()),
+                    startTime: '10:00',
+                    endTime: '11:00',
+                    category: 'meeting',
+                    user: 'user1',
+                    location: 'Conference Room A',
+                    description: 'Weekly team standup'
+                },
+                {
+                    id: 'sample2',
+                    title: 'Lunch Break',
+                    date: formatDate(new Date()),
+                    startTime: '12:00',
+                    endTime: '13:00',
+                    category: 'personal',
+                    user: 'user1',
+                    allDay: false
+                }
+            ];
+            updateDisplay();
+        }
+
+        // Mobile touch functionality
+        let longPressTimer;
+        let touchStartPosition = null;
+
+        function setupMobileTouchHandlers() {
+            if (!isMobile) return;
+            
+            // Hide non-grid view controls on mobile
+            document.querySelectorAll('.view-btn:not([data-view="grid"])').forEach(btn => {
+                btn.style.display = 'none';
+            });
+            
+            // Add touch handlers to grid cells
+            document.addEventListener('touchstart', handleTouchStart, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        }
+
+        function handleTouchStart(e) {
+            if (!isMobile || !e.target.closest('.grid-row-cell')) return;
+            
+            touchStartPosition = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY,
+                target: e.target.closest('.grid-row-cell')
+            };
+            
+            longPressTimer = setTimeout(() => {
+                // Long press detected
+                const cell = touchStartPosition.target;
+                const date = cell.dataset.date;
+                if (date) {
+                    // Add haptic feedback if available
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
+                    
+                    // Open event modal
+                    document.getElementById('eventModal').classList.add('active');
+                    document.getElementById('eventDate').value = date;
+                    
+                    // Highlight the cell briefly
+                    cell.style.backgroundColor = 'var(--accent-color)';
+                    cell.style.transition = 'background-color 0.2s';
+                    setTimeout(() => {
+                        cell.style.backgroundColor = '';
+                        cell.style.transition = '';
+                    }, 200);
+                }
+            }, 600); // 600ms for long press
+        }
+
+        function handleTouchMove(e) {
+            if (!longPressTimer || !touchStartPosition) return;
+            
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const deltaX = Math.abs(currentX - touchStartPosition.x);
+            const deltaY = Math.abs(currentY - touchStartPosition.y);
+            
+            // Cancel long press if user moves finger too much
+            if (deltaX > 10 || deltaY > 10) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
             }
-        ];
+        }
+
+        function handleTouchEnd(e) {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            touchStartPosition = null;
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            loadEvents(); // Load from Firestore instead of using static events
             updateDisplay();
             attachEventListeners();
             updateCategories();
             updateCategorySelect();
+            setupMobileTouchHandlers();
         });
 
         function attachEventListeners() {
@@ -963,13 +987,13 @@
             });
 
             // Quick actions
-            document.getElementById('quickMeetingBtn').addEventListener('click', () => {
+            document.getElementById('quickMeetingBtn')?.addEventListener('click', () => {
                 document.getElementById('eventModal').classList.add('active');
                 document.getElementById('eventTitle').value = 'Meeting';
                 document.getElementById('eventCategory').value = 'meeting';
             });
 
-            document.getElementById('quickReminderBtn').addEventListener('click', () => {
+            document.getElementById('quickReminderBtn')?.addEventListener('click', () => {
                 document.getElementById('eventModal').classList.add('active');
                 document.getElementById('eventTitle').value = 'Reminder';
                 document.getElementById('eventCategory').value = 'reminder';
@@ -1048,7 +1072,7 @@
             });
             
             function preventDefaults(e) {
-                e.preventDefault();
+                    e.preventDefault();
                 e.stopPropagation();
             }
             
@@ -1061,9 +1085,64 @@
             }
             
             function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                handleFiles(files);
+                e.preventDefault();
+                e.target.classList.remove('drop-zone');
+                
+                if (!draggedEvent) return;
+                
+                const targetDate = e.target.dataset.date;
+                const targetHour = e.target.dataset.hour;
+                
+                if (!targetDate) return;
+                
+                // Update event
+                const eventToMove = events.find(event => event.id === draggedEvent.id);
+                if (eventToMove) {
+                    const originalDate = eventToMove.date;
+                    const originalStartTime = eventToMove.startTime;
+                    
+                    eventToMove.date = targetDate;
+                    
+                    // Only update time if we have a target hour (week view)
+                    if (targetHour && eventToMove.startTime) {
+                        const oldStartTime = eventToMove.startTime.split(':');
+                        const newStartTime = `${targetHour.padStart(2, '0')}:${oldStartTime[1]}`;
+                        eventToMove.startTime = newStartTime;
+                        
+                        // Update end time if it exists
+                        if (eventToMove.endTime) {
+                            const oldEndTime = eventToMove.endTime.split(':');
+                            const duration = parseInt(oldEndTime[0]) - parseInt(oldStartTime[0]);
+                            const newEndHour = parseInt(targetHour) + duration;
+                            eventToMove.endTime = `${newEndHour.toString().padStart(2, '0')}:${oldEndTime[1]}`;
+                        }
+                        
+                        console.log(`Event moved: ${eventToMove.title} to ${targetDate} at ${eventToMove.startTime}`);
+                    } else {
+                        console.log(`Event moved: ${eventToMove.title} to ${targetDate}`);
+                    }
+                    
+                    // Save changes to Firestore
+                    if (eventToMove.id && typeof eventToMove.id === 'string' && eventToMove.id !== 'sample1' && eventToMove.id !== 'sample2') {
+                        const eventData = { ...eventToMove };
+                        delete eventData.id; // Remove ID from the data to update
+                        
+                        db.collection('events').doc(eventToMove.id).update(eventData)
+                            .then(() => {
+                                console.log('Event updated in Firestore');
+                            })
+                            .catch((error) => {
+                                console.error('Error updating event: ', error);
+                                // Revert changes if Firestore update fails
+                                eventToMove.date = originalDate;
+                                eventToMove.startTime = originalStartTime;
+                                updateDisplay();
+                            });
+                    } else {
+                        // For local/sample events, just update display
+                        updateDisplay();
+                    }
+                }
             }
         }
 
@@ -1436,7 +1515,7 @@
             chip.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (!chip.classList.contains('dragging')) {
-                    showEventDetails(event);
+                showEventDetails(event);
                 }
             });
             
@@ -1567,6 +1646,9 @@
             // Update event
             const eventToMove = events.find(event => event.id === draggedEvent.id);
             if (eventToMove) {
+                const originalDate = eventToMove.date;
+                const originalStartTime = eventToMove.startTime;
+                
                 eventToMove.date = targetDate;
                 
                 // Only update time if we have a target hour (week view)
@@ -1588,7 +1670,26 @@
                     console.log(`Event moved: ${eventToMove.title} to ${targetDate}`);
                 }
                 
-                updateDisplay();
+                // Save changes to Firestore
+                if (eventToMove.id && typeof eventToMove.id === 'string' && eventToMove.id !== 'sample1' && eventToMove.id !== 'sample2') {
+                    const eventData = { ...eventToMove };
+                    delete eventData.id; // Remove ID from the data to update
+                    
+                    db.collection('events').doc(eventToMove.id).update(eventData)
+                        .then(() => {
+                            console.log('Event updated in Firestore');
+                        })
+                        .catch((error) => {
+                            console.error('Error updating event: ', error);
+                            // Revert changes if Firestore update fails
+                            eventToMove.date = originalDate;
+                            eventToMove.startTime = originalStartTime;
+                            updateDisplay();
+                        });
+                } else {
+                    // For local/sample events, just update display
+                    updateDisplay();
+                }
             }
         }
 
@@ -1603,7 +1704,6 @@
 
         function addEvent() {
             const newEvent = {
-                id: Date.now(),
                 title: document.getElementById('eventTitle').value,
                 date: document.getElementById('eventDate').value,
                 category: document.getElementById('eventCategory').value,
@@ -1611,7 +1711,8 @@
                 description: document.getElementById('eventDescription').value,
                 location: document.getElementById('eventLocation').value,
                 allDay: document.getElementById('allDayEvent').checked,
-                attachments: [...eventAttachments] // Copy current attachments
+                attachments: [...eventAttachments], // Copy current attachments
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             
             if (!newEvent.allDay) {
@@ -1619,15 +1720,28 @@
                 newEvent.endTime = document.getElementById('eventEndTime').value;
             }
             
-            events.push(newEvent);
-            document.getElementById('eventModal').classList.remove('active');
-            document.getElementById('eventForm').reset();
-            
-            // Clear attachments for next event
-            eventAttachments = [];
-            displayAttachments();
-            
-            updateDisplay();
+            // Save to Firestore
+            db.collection('events').add(newEvent)
+                .then((docRef) => {
+                    console.log('Event added with ID: ', docRef.id);
+                    document.getElementById('eventModal').classList.remove('active');
+                    document.getElementById('eventForm').reset();
+                    
+                    // Clear attachments for next event
+                    eventAttachments = [];
+                    displayAttachments();
+                })
+                .catch((error) => {
+                    console.error('Error adding event: ', error);
+                    // Fallback to local storage if Firestore fails
+                    newEvent.id = Date.now();
+                    events.push(newEvent);
+                    document.getElementById('eventModal').classList.remove('active');
+                    document.getElementById('eventForm').reset();
+                    eventAttachments = [];
+                    displayAttachments();
+                    updateDisplay();
+                });
         }
 
         function updateCategories() {
