@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Calendar</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --accent-color: #28a745;
+            --background-color: #1a1a1a;
+            --surface-color: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-color: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--surface-color);
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .navigation-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .navigation-controls button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .navigation-controls button:hover {
+            background: #0056b3;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .add-event-mobile {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .main-container {
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .calendar-container {
+            background: var(--surface-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .grid-view {
+            display: none;
+            width: 100%;
+        }
+
+        .grid-view.active {
+            display: block;
+        }
+
+        .grid-header {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            padding: 15px;
+            background: var(--background-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .grid-header > div {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .grid-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .grid-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .grid-row-cell {
+            padding: 8px;
+            border-radius: 4px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .grid-row-cell:first-child {
+            background: var(--background-color);
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .events-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-start;
+        }
+
+        .event-chip {
+            background: #5484ed;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        .event-title {
+            font-weight: 500;
+        }
+
+        .event-time {
+            font-size: 11px;
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        .date-label {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--background-color);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-footer button {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .modal-footer button[type="submit"] {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .modal-footer button[type="button"] {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .modal-footer button:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-left {
+                justify-content: center;
+            }
+
+            .grid-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+                padding: 10px;
+            }
+
+            .grid-header {
+                grid-template-columns: 1fr;
+                gap: 5px;
+                padding: 10px;
+            }
+
+            .grid-header > div:first-child {
+                text-align: center;
+            }
+
+            .grid-header > div:last-child {
+                display: none;
+            }
+
+            .events-cell {
+                margin-top: 5px;
+            }
+        }
+    </style>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCg87sqNfBpZSwmC2wSnpNU7_YgYuoZrvw",
+            authDomain: "my-calendar-app-7fa0e.firebaseapp.com",
+            projectId: "my-calendar-app-7fa0e",
+            storageBucket: "my-calendar-app-7fa0e.appspot.com",
+            messagingSenderId: "618763956813",
+            appId: "1:618763956813:web:48a5a77f34e086f62e6204"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1 style="font-size: 18px; font-weight: 500;">📅 My Calendar</h1>
+            <div class="navigation-controls">
+                <button id="prevBtn">←</button>
+                <button id="todayBtn">Today</button>
+                <button id="nextBtn">→</button>
+            </div>
+            <span id="currentDateRange" style="color: var(--text-secondary); font-size: 14px;"></span>
+        </div>
+        <div class="header-right">
+            <button id="addEventBtn" class="add-event-mobile">+ Add Event</button>
+            <button id="themeToggle">🌙</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="calendar-container">
+            <!-- Grid View -->
+            <div class="grid-view active" id="gridView">
+                <div class="grid-header">
+                    <div>Date</div>
+                    <div>Events</div>
+                </div>
+                <div id="gridContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal" id="eventModal">
+        <div class="modal-content">
+            <h2 class="modal-header">Add Event</h2>
+            <form id="eventForm">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="eventTitle" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="eventDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Time</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="time" id="eventStartTime" style="flex: 1;">
+                        <span style="align-self: center;">to</span>
+                        <input type="time" id="eventEndTime" style="flex: 1;">
+                    </div>
+                    <label style="margin-top: 5px;">
+                        <input type="checkbox" id="allDayEvent"> All day event
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="eventCategory"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="eventLocation" placeholder="Add location">
+                </div>
+                
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="eventDescription" placeholder="Add description"></textarea>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" id="cancelBtn">Cancel</button>
+                    <button type="submit">Save Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentView = 'grid';
+        let currentDate = new Date();
+        let events = [];
+        let eventAttachments = [];
+        
+        // Mobile detection
+        const isMobile = window.innerWidth <= 600;
+        
+        // Categories
+        let categories = [
+            { id: 'meeting', name: 'Meetings', color: '#5484ed' },
+            { id: 'personal', name: 'Personal', color: '#a4bdfc' },
+            { id: 'work', name: 'Work', color: '#46d6db' },
+            { id: 'reminder', name: 'Reminders', color: '#fbd75b' },
+            { id: 'health', name: 'Health', color: '#dc2127' }
+        ];
+
+        // Load events from Firestore
+        function loadEvents() {
+            console.log('Loading events from Firestore...');
+            db.collection('events').onSnapshot((snapshot) => {
+                events = [];
+                snapshot.forEach((doc) => {
+                    events.push({ id: doc.id, ...doc.data() });
+                });
+                console.log('Loaded events:', events);
+                updateDisplay();
+            }, (error) => {
+                console.error('Error loading events:', error);
+                // Fallback to sample events if Firestore fails
+                loadSampleEvents();
+            });
+        }
+
+        // Fallback sample events
+        function loadSampleEvents() {
+            console.log('Loading sample events...');
+            events = [
+                {
+                    id: 'sample1',
+                    title: 'Team Meeting',
+                    date: formatDate(new Date()),
+                    startTime: '10:00',
+                    endTime: '11:00',
+                    category: 'meeting',
+                    user: 'default',
+                    location: 'Conference Room A',
+                    description: 'Weekly team standup'
+                },
+                {
+                    id: 'sample2',
+                    title: 'Lunch Break',
+                    date: formatDate(new Date()),
+                    startTime: '12:00',
+                    endTime: '13:00',
+                    category: 'personal',
+                    user: 'default',
+                    allDay: false
+                }
+            ];
+            updateDisplay();
+        }
+
+        // Mobile touch functionality
+        let longPressTimer;
+        let touchStartPosition = null;
+
+        function setupMobileTouchHandlers() {
+            if (!isMobile) return;
+            
+            // Add touch handlers to grid cells
+            document.addEventListener('touchstart', handleTouchStart, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        }
+
+        function handleTouchStart(e) {
+            if (!isMobile || !e.target.closest('.grid-row-cell')) return;
+            
+            touchStartPosition = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY,
+                target: e.target.closest('.grid-row-cell')
+            };
+            
+            longPressTimer = setTimeout(() => {
+                // Long press detected
+                const cell = touchStartPosition.target;
+                const date = cell.dataset.date;
+                if (date) {
+                    // Add haptic feedback if available
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
+                    
+                    // Open event modal
+                    document.getElementById('eventModal').classList.add('active');
+                    document.getElementById('eventDate').value = date;
+                    
+                    // Highlight the cell briefly
+                    cell.style.backgroundColor = 'var(--accent-color)';
+                    cell.style.transition = 'background-color 0.2s';
+                    setTimeout(() => {
+                        cell.style.backgroundColor = '';
+                        cell.style.transition = '';
+                    }, 200);
+                }
+            }, 600); // 600ms for long press
+        }
+
+        function handleTouchMove(e) {
+            if (!longPressTimer || !touchStartPosition) return;
+            
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const deltaX = Math.abs(currentX - touchStartPosition.x);
+            const deltaY = Math.abs(currentY - touchStartPosition.y);
+            
+            // Cancel long press if user moves finger too much
+            if (deltaX > 10 || deltaY > 10) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            touchStartPosition = null;
+        }
+
+        // Core functions
+        function getEventsForDate(date) {
+            const dateStr = formatDate(date);
+            return events.filter(event => event.date === dateStr);
+        }
+
+        function addEvent() {
+            const newEvent = {
+                title: document.getElementById('eventTitle').value,
+                date: document.getElementById('eventDate').value,
+                category: document.getElementById('eventCategory').value,
+                user: 'default',
+                description: document.getElementById('eventDescription').value,
+                location: document.getElementById('eventLocation').value,
+                allDay: document.getElementById('allDayEvent').checked,
+                attachments: [...eventAttachments],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            if (!newEvent.allDay) {
+                newEvent.startTime = document.getElementById('eventStartTime').value;
+                newEvent.endTime = document.getElementById('eventEndTime').value;
+            }
+            
+            console.log('Adding event:', newEvent);
+            
+            // Save to Firestore
+            db.collection('events').add(newEvent)
+                .then((docRef) => {
+                    console.log('Event added with ID: ', docRef.id);
+                    document.getElementById('eventModal').classList.remove('active');
+                    document.getElementById('eventForm').reset();
+                    eventAttachments = [];
+                })
+                .catch((error) => {
+                    console.error('Error adding event: ', error);
+                    // Fallback to local storage if Firestore fails
+                    newEvent.id = Date.now();
+                    events.push(newEvent);
+                    document.getElementById('eventModal').classList.remove('active');
+                    document.getElementById('eventForm').reset();
+                    eventAttachments = [];
+                    updateDisplay();
+                });
+        }
+
+        function updateDisplay() {
+            displayGridView();
+            updateDateRange();
+        }
+
+        function displayGridView() {
+            const gridContent = document.getElementById('gridContent');
+            if (!gridContent) return;
+            
+            gridContent.innerHTML = '';
+            
+            // Get current week dates
+            const startDate = new Date(currentDate);
+            startDate.setDate(currentDate.getDate() - currentDate.getDay()); // Start of week
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const dayEvents = getEventsForDate(date);
+                
+                const row = document.createElement('div');
+                row.className = 'grid-row';
+                
+                const dateCell = document.createElement('div');
+                dateCell.className = 'grid-row-cell';
+                dateCell.dataset.date = formatDate(date);
+                
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                dateCell.innerHTML = `
+                    <div class="date-label">
+                        <div style="font-weight: 600; color: var(--text-primary);">${dayName}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">${monthDay}</div>
+                    </div>
+                `;
+                
+                const eventsCell = document.createElement('div');
+                eventsCell.className = 'grid-row-cell events-cell';
+                
+                if (dayEvents.length === 0) {
+                    eventsCell.innerHTML = '<div style="color: var(--text-secondary); font-style: italic; font-size: 12px;">No events</div>';
+                } else {
+                    dayEvents.forEach(event => {
+                        const eventChip = document.createElement('div');
+                        eventChip.className = 'event-chip';
+                        eventChip.style.backgroundColor = getCategoryColor(event.category);
+                        eventChip.innerHTML = `
+                            <span class="event-title">${event.title}</span>
+                            ${event.startTime ? `<span class="event-time">${event.startTime}</span>` : ''}
+                        `;
+                        eventsCell.appendChild(eventChip);
+                    });
+                }
+                
+                row.appendChild(dateCell);
+                row.appendChild(eventsCell);
+                gridContent.appendChild(row);
+            }
+        }
+
+        function getCategoryColor(categoryId) {
+            const category = categories.find(c => c.id === categoryId);
+            return category ? category.color : '#5484ed';
+        }
+
+        function navigate(direction) {
+            const newDate = new Date(currentDate);
+            newDate.setDate(currentDate.getDate() + (direction * 7)); // Move by week
+            currentDate = newDate;
+            updateDisplay();
+        }
+
+        function updateDateRange() {
+            const dateRange = document.getElementById('currentDateRange');
+            if (dateRange) {
+                const startDate = new Date(currentDate);
+                startDate.setDate(currentDate.getDate() - currentDate.getDay());
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6);
+                
+                dateRange.textContent = `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+            }
+        }
+
+        function updateCategories() {
+            const select = document.getElementById('eventCategory');
+            if (select) {
+                select.innerHTML = '';
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+            loadEvents();
+            updateCategories();
+            updateDisplay();
+            setupMobileTouchHandlers();
+
+            // Navigation
+            document.getElementById('prevBtn').addEventListener('click', () => navigate(-1));
+            document.getElementById('nextBtn').addEventListener('click', () => navigate(1));
+            document.getElementById('todayBtn').addEventListener('click', () => {
+                currentDate = new Date();
+                updateDisplay();
+            });
+
+            // Add event
+            document.getElementById('addEventBtn').addEventListener('click', () => {
+                document.getElementById('eventModal').classList.add('active');
+                document.getElementById('eventDate').value = formatDate(currentDate);
+            });
+
+            // Modal controls
+            document.getElementById('cancelBtn').addEventListener('click', () => {
+                document.getElementById('eventModal').classList.remove('active');
+            });
+
+            // Event form
+            document.getElementById('eventForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                addEvent();
+            });
+
+            // All day event
+            document.getElementById('allDayEvent').addEventListener('change', function() {
+                const timeInputs = document.querySelectorAll('#eventStartTime, #eventEndTime');
+                timeInputs.forEach(input => {
+                    input.disabled = this.checked;
+                    if (this.checked) input.value = '';
+                });
+            });
+
+            // Close modal when clicking outside
+            document.getElementById('eventModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('eventModal')) {
+                    document.getElementById('eventModal').classList.remove('active');
+                }
+            });
+
+            // Theme toggle (placeholder)
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                console.log('Theme toggle clicked');
+            });
+        });
+    </script>
+</body>
+</html>
